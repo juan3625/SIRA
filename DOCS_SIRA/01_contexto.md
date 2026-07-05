@@ -1,0 +1,5 @@
+DESCRIPCION Sistema web full stack para la gestión y centralización de repositorios de aprendizaje académicos, que permite optimizar la organización, acceso y control de recursos educativos dentro del ecosistema institucional mediante una aplicación cliente-servidor.
+
+Contexto del Proyecto: S.I.R.A. En el entorno académico actual, la generación de conocimiento, material de apoyo y recursos educativos digitales crece a un ritmo acelerado. Sin embargo, las instituciones de formación técnica y tecnológica suelen enfrentarse al reto de la dispersión de la información. Al no contar con una plataforma centralizada, los contenidos de aprendizaje (guías, talleres, proyectos y material de consulta) quedan fragmentados en correos electrónicos, herramientas de almacenamiento en la nube personales o discos locales de los instructores y aprendices.
+
+Esta falta de centralización dificulta el acceso ágil al conocimiento, entorpece el seguimiento académico y limita la reutilización de materiales de alto valor pedagógico que podrían beneficiar a futuras cohortes o "fichas" de estudio.
