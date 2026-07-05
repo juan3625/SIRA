@@ -1,0 +1,355 @@
+openapi: 3.0.3
+info:
+  title: SIRA API
+  description: >
+    API del Sistema de Información y Repositorio de Aprendices (SIRA).
+    Incluye autenticación, gestión de usuarios y gestión documental.
+  version: "1.0.0"
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor de desarrollo
+
+tags:
+  - name: Auth
+    description: Endpoints de autenticación (login y registro)
+  - name: Usuarios
+    description: Gestión CRUD de usuarios
+  - name: Documentos
+    description: Gestión documental (subida, consulta, actualización y eliminación)
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión de usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correo, password]
+              properties:
+                correo: { type: string, format: email, example: usuario@gmail.com }
+                password: { type: string, example: "123456" }
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAuthToken"
+        "401":
+          description: Credenciales incorrectas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar nuevo usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nombre, correo, password, rol]
+              properties:
+                nombre: { type: string, example: "María López" }
+                correo: { type: string, format: email, example: maria@example.com }
+                password: { type: string, example: SecurePass123 }
+                rol: { type: string, enum: [aprendiz, instructor, admin], example: aprendiz }
+      responses:
+        "201":
+          description: Usuario creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+        "400":
+          description: Correo ya registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /usuarios:
+    get:
+      tags: [Usuarios]
+      summary: Listar todos los usuarios
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Usuarios obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuarioList"
+        "401":
+          description: Token no proporcionado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+  /usuarios/{id}:
+    get:
+      tags: [Usuarios]
+      summary: Obtener usuario por ID
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/UsuarioId"
+      responses:
+        "200":
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+        "404":
+          description: Usuario no existe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    put:
+      tags: [Usuarios]
+      summary: Actualizar usuario existente
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/UsuarioId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string, example: "Juan Pérez Actualizado" }
+                correo: { type: string, format: email, example: juan.nuevo@example.com }
+      responses:
+        "200":
+          description: Usuario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseUsuario"
+    delete:
+      tags: [Usuarios]
+      summary: Eliminar usuario (requiere rol admin)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/UsuarioId"
+      responses:
+        "200":
+          description: Usuario eliminado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseNullData"
+
+  /documentos:
+    post:
+      tags: [Documentos]
+      summary: Subir un nuevo documento
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [titulo, archivo]
+              properties:
+                titulo: { type: string, example: "Proyecto de Arquitectura" }
+                descripcion: { type: string, example: "Documentación del backend SIRA" }
+                archivo: { type: string, format: binary }
+                categoria_id: { type: integer, example: 1 }
+      responses:
+        "201":
+          description: Documento subido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseDocumento"
+        "400":
+          description: Formato de archivo no permitido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+    get:
+      tags: [Documentos]
+      summary: Listar todos los documentos
+      responses:
+        "200":
+          description: Documentos obtenidos correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseDocumentoList"
+
+  /documentos/{id}:
+    get:
+      tags: [Documentos]
+      summary: Obtener documento por ID
+      parameters:
+        - $ref: "#/components/parameters/DocumentoId"
+      responses:
+        "200":
+          description: Documento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseDocumento"
+    put:
+      tags: [Documentos]
+      summary: Actualizar información del documento
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/DocumentoId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo: { type: string, example: "Proyecto de Arquitectura - Versión Final" }
+                descripcion: { type: string, example: "Documentación completa del backend con pruebas" }
+      responses:
+        "200":
+          description: Documento actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseDocumento"
+    delete:
+      tags: [Documentos]
+      summary: Eliminar documento (dueño o admin)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: "#/components/parameters/DocumentoId"
+      responses:
+        "200":
+          description: Documento eliminado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseNullData"
+        "403":
+          description: Sin permisos para eliminar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseError"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    UsuarioId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+      description: ID del usuario
+    DocumentoId:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+      description: ID del documento
+
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        nombre: { type: string, example: "Juan Pérez" }
+        correo: { type: string, format: email, example: usuario@gmail.com }
+        rol: { type: string, enum: [aprendiz, instructor, admin], example: aprendiz }
+
+    Documento:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        titulo: { type: string, example: "Proyecto de Arquitectura" }
+        descripcion: { type: string, example: "Documentación del backend SIRA" }
+        ruta_archivo: { type: string, example: "/uploads/documentos/archivo_1234567890.pdf" }
+        formato: { type: string, enum: [pdf, doc, docx], example: pdf }
+        tamano: { type: string, example: "2048 KB" }
+        usuario_id: { type: integer, example: 1 }
+        fecha_subida: { type: string, format: date-time, example: "2026-07-04T14:30:00Z" }
+
+    AuthToken:
+      type: object
+      properties:
+        access_token: { type: string, example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+        usuario:
+          $ref: "#/components/schemas/Usuario"
+
+    ApiResponseAuthToken:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string, example: "Login exitoso" }
+        data:
+          $ref: "#/components/schemas/AuthToken"
+
+    ApiResponseUsuario:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:
+          $ref: "#/components/schemas/Usuario"
+
+    ApiResponseUsuarioList:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Usuario"
+
+    ApiResponseDocumento:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:
+          $ref: "#/components/schemas/Documento"
+
+    ApiResponseDocumentoList:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Documento"
+
+    ApiResponseNullData:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        message: { type: string }
+        data: { nullable: true, example: null }
+
+    ApiResponseError:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        message: { type: string }
+        data: { nullable: true, example: null }
